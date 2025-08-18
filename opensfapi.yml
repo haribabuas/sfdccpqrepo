@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: MYHerokuAPI
+  version: 1.0.0
+  description: API for Salesforce integration
+
+servers:
+  - url: https://sfdccpq-cce3ffe89c28.herokuapp.com/
+
+paths:
+  /hello:
+    get:
+      summary: Returns a greeting
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
