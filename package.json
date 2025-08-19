@@ -1,17 +1,12 @@
 {
-  "name": "phone-change",
-  "version": "0.0.0",
-  "description": "Heroku Connect Sample App - Phone Change",
+  "name": "heroku-pricebook-api",
+  "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.13.1",
-    "body-parser": "^1.13.2",
-    "pg": "^4.4.0"
-  },
-  "engines": {
-    "node": "0.12.7"
+    "express": "^4.18.2",
+    "pg": "^8.11.1"
   }
 }
