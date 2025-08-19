@@ -1,23 +1,23 @@
 openapi: 3.0.0
 info:
-  title: MYHerokuAPI
+  title: DISW_Price_Book API
   version: 1.0.0
-  description: API for Salesforce integration
-
-servers:
-  - url: https://sfdccpq-cce3ffe89c28.herokuapp.com/
-
 paths:
-  /hello:
+  /pricebook/{recordId}:
     get:
-      summary: Returns a greeting
+      summary: Get DISW_Price_Book__c record by Salesforce ID
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Successful response
+          description: Record found
           content:
             application/json:
               schema:
                 type: object
-                properties:
-                  message:
-                    type: string
+        '404':
+          description: Record not found

@@ -6,6 +6,37 @@ var app = express();
 
 app.set('port', process.env.PORT || 5000);
 
+
+// Connect to Heroku Postgres
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+// API endpoint to get record by Salesforce ID
+app.get('/pricebook/:recordId', async (req, res) => {
+  const recordId = req.params.recordId;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM disw_price_book WHERE salesforce_id = $1',
+      [recordId]
+    );
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).send('Record not found');
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
