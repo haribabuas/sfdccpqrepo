@@ -32,7 +32,6 @@ app.get('/pricebook/:recordId', async (req, res) => {
     //res.json(result);
     if (result.rows.length > 0) {
       
-   console.log('@@@leng',result.rows[0]);
 
     res.json(result.rows[0]);
     } 
