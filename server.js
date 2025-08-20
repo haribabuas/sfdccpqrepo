@@ -27,11 +27,14 @@ app.get('/pricebook/:recordId', async (req, res) => {
     const result = await pool.query(
       'SELECT * FROM salesforce.disw_price_book__c'
     );
-    console.log('@@@',result);
+    
     console.log('@@@leng',result.rows.length);
     //res.json(result);
     if (result.rows.length > 0) {
-      res.status(200).json({ success: true, data: result.rows[0] });
+      
+   console.log('@@@leng',result.rows[0]);
+
+    res.status(200).json({ data: result.rows[0] });
     } 
     else {
       res.status(404).send('Record not found');
