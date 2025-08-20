@@ -22,6 +22,13 @@ app.get('/', (req, res) => {
 // API endpoint to get record by Salesforce ID
 app.get('/pricebook/:recordId', async (req, res) => {
   const recordId = req.params.recordId;
+  pg.connect(connectionString, function(err, client, done) {
+   client.query('SELECT * FROM pg_tables', function(err, result) {
+      done();
+      if(err) return console.error(err);
+      console.log(result.rows);
+    });
+    });
   try {
     const result = await pool.query(
       'SELECT schemaname, tablename FROM pg_tables'
