@@ -25,14 +25,13 @@ app.get('/pricebook/:recordId', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'SELECT schemaname, tablename FROM pg_tables'
+      'SELECT * FROM disw_price_book__c'
     );
     console.log('@@@',result);
     console.log('@@@leng',result.rows.length);
     //res.json(result);
     if (result.rows.length > 0) {
-        res.status(200).json({ message: 'Success', data: result });
-      //res.json(result);
+      res.json(result);
     } else {
       res.status(404).send('Record not found');
     }
