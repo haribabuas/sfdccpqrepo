@@ -22,7 +22,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
   const recordId = req.params.recordId;
   try {
     const result = await pool.query(
-      SELECT * FROM salesforce.disw_price_book__c
+      'SELECT * FROM salesforce.disw_price_book__c'
     );
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
@@ -31,7 +31,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server errorcustom');
+    res.status(500).send('Server errorcust43om');
   }
 });
 
