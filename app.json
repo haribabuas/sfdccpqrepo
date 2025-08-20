@@ -1,6 +1,6 @@
 {
   "name": "Phone Change",
-  "description": "Heroku Connect Sample App - Phone Change",
+  "description": "Heroku Connect Sample App",
   "repository": "https://github.com/haribabuas/sfdccpqrepo",
   "success_url": "/setup.html",
   "env": {

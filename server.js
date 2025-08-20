@@ -37,7 +37,7 @@ app.listen(port, () => {
 });
 
 
-app.use(express.static('public'));
+/*app.use(express.static('public'));
 app.use(bodyParser.json());
 
 app.post('/update', function(req, res) {
@@ -70,7 +70,7 @@ app.post('/update', function(req, res) {
             }
         );
     });
-});
+});*/
 
 app.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
