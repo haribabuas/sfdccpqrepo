@@ -22,7 +22,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
   const recordId = req.params.recordId;
   try {
     const result = await pool.query(
-      'SELECT * FROM salesforce.disw_price_book__c'
+      'SELECT schemaname, tablename FROM pg_tables'
     );
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
