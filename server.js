@@ -5,10 +5,12 @@ var pg = require('pg');
 var app = express();
 
 const port = process.env.PORT || 3000;
+console.log(process.env.DATABASE_URL);
+var connectionString = "postgres://u53mp4qmcr9ml5:p93b5813abff26b78ce5d548dd5d36f08311d35026ff75c23f7095301e9a608e1@c7itisjfjj8ril.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/dakm542hgqntso";
 
 const { Pool } = require('pg');
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: { rejectUnauthorized: false }
 });
 
