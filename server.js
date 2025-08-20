@@ -29,7 +29,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
     );
     console.log('@@@',result);
     console.log('@@@leng',result.rows.length);
-    res.json(result);
+    //res.json(result);
     if (result.rows.length > 0) {
         
       res.json(result);
