@@ -7,11 +7,11 @@ var app = express();
 app.set('port', process.env.PORT || 5000);
 
 
-// Connect to Heroku Postgres
-const pool = new Pool({
+
+/*const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
-});
+});*/
 
 // API endpoint to get record by Salesforce ID
 app.get('/pricebook/:recordId', async (req, res) => {
