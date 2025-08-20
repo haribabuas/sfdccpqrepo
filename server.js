@@ -25,7 +25,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'SELECT * FROM disw_price_book__c'
+      'SELECT * FROM salesforce.disw_price_book__c'
     );
     console.log('@@@',result);
     console.log('@@@leng',result.rows.length);
