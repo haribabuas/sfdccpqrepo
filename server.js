@@ -11,6 +11,10 @@ const port = process.env.PORT || 3000;
   ssl: { rejectUnauthorized: false }
 });*/
 
+app.get('/', (req, res) => {
+  res.send('Heroku App is running!');
+});
+
 // API endpoint to get record by Salesforce ID
 app.get('/pricebook/:recordId', async (req, res) => {
   const recordId = req.params.recordId;
@@ -69,7 +73,3 @@ app.post('/update', function(req, res) {
         );
     });
 });*/
-
-app.listen(app.get('port'), function () {
-    console.log('Express server listening on port ' + app.get('port'));
-});
