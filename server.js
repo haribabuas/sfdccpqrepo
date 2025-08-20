@@ -31,8 +31,9 @@ app.get('/pricebook/:recordId', async (req, res) => {
     console.log('@@@leng',result.rows.length);
     //res.json(result);
     if (result.rows.length > 0) {
-      res.json(result);
-    } else {
+      res.status(200).json({ success: true, data: result.rows[0] });
+    } 
+    else {
       res.status(404).send('Record not found');
     }
   } catch (err) {
