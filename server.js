@@ -5,7 +5,7 @@ var pg = require('pg');
 var app = express();
 
 const port = process.env.PORT || 3000;
-console.log(process.env.DATABASE_URL);
+console.log('2233Se',process.env.DATABASE_URL);
 var connectionString = "postgres://u53mp4qmcr9ml5:p93b5813abff26b78ce5d548dd5d36f08311d35026ff75c23f7095301e9a608e1@c7itisjfjj8ril.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/dakm542hgqntso";
 
 const { Pool } = require('pg');
@@ -22,17 +22,12 @@ app.get('/', (req, res) => {
 // API endpoint to get record by Salesforce ID
 app.get('/pricebook/:recordId', async (req, res) => {
   const recordId = req.params.recordId;
-  pg.connect(connectionString, function(err, client, done) {
-   client.query('SELECT * FROM pg_tables', function(err, result) {
-      done();
-      if(err) return console.error(err);
-      console.log(result.rows);
-    });
-    });
+  
   try {
     const result = await pool.query(
       'SELECT schemaname, tablename FROM pg_tables'
     );
+    console.log('@@@',result);
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
     } else {
