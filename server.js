@@ -4,9 +4,7 @@ var pg = require('pg');
 
 var app = express();
 
-app.set('port', process.env.PORT || 5000);
-
-
+const port = process.env.PORT || 3000;
 
 /*const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
