@@ -25,19 +25,17 @@ app.get('/pricebook/:recordId', async (req, res) => {
   
   try {
     const result = await pool.query(
-      
-    'SELECT * FROM disw_price_book__c WHERE id = $1',
-    [recordId]
+      'SELECT * FROM salesforce.disw_price_book__c'
     );
     
     console.log('@@@leng',result.rows.length);
     //res.json(result);
-   
-if (result.rows.length > 0) {
-      // Return a plain object as expected by the OpenAPI spec
-      res.status(200).json(result.rows[0]);
-    }
+    if (result.rows.length > 0) {
+      
+   console.log('@@@leng',result.rows[0]);
 
+    res.json(result.rows[0]);
+    } 
     else {
       res.status(404).send('Record not found');
     }
