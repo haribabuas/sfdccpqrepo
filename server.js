@@ -22,8 +22,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
   const recordId = req.params.recordId;
   try {
     const result = await pool.query(
-      'SELECT * FROM disw_price_book WHERE salesforce_id = $1',
-      [recordId]
+      SELECT * FROM salesforce.disw_price_book__c
     );
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
