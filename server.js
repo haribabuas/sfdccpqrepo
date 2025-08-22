@@ -154,11 +154,64 @@ app.post('/create-quote-lines', async (req, res) => {
   }
 });
 
+app.post('/create-quote-lines-sap', async (req, res) => {
+  const { quoteId, sapLineIds } = req.body;
+  const accessToken = req.headers['authorization']?.split(' ')[1];
+  const instanceUrl = req.headers['salesforce-instance-url'];
 
-/*function translateLicenseType(type) {
-  
-  return type === 'Standard' ? 'STD' : 'MAINT';
-}*/
+  if (!accessToken || !instanceUrl || !quoteId || !sapLineIds?.length) {
+    return res.status(400).json({ error: 'Missing required data' });
+  }
+
+  const conn = new jsforce.Connection({ accessToken, instanceUrl });
+
+  try {
+    
+    const sapLinesQuery = `
+      SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
+             CPQ_Product__c, Install__c,
+             CPQ_Product__r.Access_Range__c,
+             Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
+      FROM SAP_Install_Line_Item__c
+      WHERE Id IN (${sapLineIds.map(id => `'${id}'`).join(',')})
+    `;
+
+    const sapLinesResult = await conn.query(sapLinesQuery);
+    const quoteLinesToInsert = [];
+
+    for (const lineItem of sapLinesResult.records) {
+      
+
+      const startDate = lineItem.End_Date_Consolidated__c
+        ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
+        : new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 12);
+
+      const quoteLine = {
+        SBQQ__Product__c: lineItem.CPQ_Product__c,
+        SBQQ__Quote__c: quoteId,
+        Install__c: lineItem.Install__c,
+        Access_Range__c: lineItem.CPQ_Product__r?.Access_Range__c,
+        Account__c: lineItem.Install__r?.AccountID__c,
+        Partner_Account__c: lineItem.Install__r?.Partner_Account__c,
+        Sales_Org__c: lineItem.Install__r?.CPQ_Sales_Org__c,
+        SBQQ__Quantity__c: lineItem.Quantity__c,
+        SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
+        SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
+        CPQ_License_Type__c: 'MAINT'
+      };
+
+      quoteLinesToInsert.push(quoteLine);
+    }
+
+    const result = await conn.sobject('SBQQ__QuoteLine__c').create(quoteLinesToInsert);
+    res.status(200).json({ message: 'Quote lines created', result });
+  } catch (err) {
+    console.error('Error creating quote lines:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 function getAdjustedStartDate(dateStr) {
   const date = new Date(dateStr);
