@@ -71,9 +71,6 @@ app.post('/create-price-book', async (req, res) => {
   }
 });*/
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Heroku app running on port ${PORT}`));
-
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
