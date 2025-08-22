@@ -1,4 +1,5 @@
 var express = require('express');
+const jsforce = require('jsforce');
 var bodyParser = require('body-parser');
 var pg = require('pg');
 
@@ -43,6 +44,37 @@ app.get('/pricebook/:recordId', async (req, res) => {
     res.status(500).send('Server errorcust43om');
   }
 });
+
+
+app.use(express.json());
+app.post('/create-price-book', async (req, res) => {
+  const recordData = req.body;
+  console.log('@@@Creat',recordData);
+  const authHeader = req.headers['authorization'];
+  const accessToken = authHeader?.split(' ')[1];
+  const instanceUrl = req.headers['salesforce-instance-url'];
+
+  if (!accessToken || !instanceUrl) {
+    return res.status(401).json({ error: 'Missing Salesforce auth info' });
+  }
+
+  const conn = new jsforce.Connection({
+    accessToken,
+    instanceUrl
+  });
+
+  try {
+    const result = await conn.sobject("disw_price_book__c").create(recordData);
+    res.status(200).json({ message: "Record created", result });
+  } catch (err) {
+    console.error("Insert error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Heroku app running on port ${PORT}`));
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
