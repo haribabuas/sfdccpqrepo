@@ -103,6 +103,70 @@ app.post('/clone-contact', async (req, res) => {
   }
 });
 
+
+app.post('/create-quote-lines', async (req, res) => {
+  const { quoteId, sapInstallLines } = req.body;
+  const accessToken = req.headers['authorization']?.split(' ')[1];
+  const instanceUrl = req.headers['salesforce-instance-url'];
+
+  if (!accessToken || !instanceUrl || !quoteId || !sapInstallLines) {
+    return res.status(400).json({ error: 'Missing required data' });
+  }
+
+  const conn = new jsforce.Connection({ accessToken, instanceUrl });
+
+  try {
+    const quoteLinesToInsert = [];
+
+    for (const lineItem of sapInstallLines) {
+      
+     // const licenseType = translateLicenseType(lineItem.License_Type__c);
+
+      
+      const startDate = lineItem.End_Date_Consolidated__c
+        ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
+        : new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 12);
+
+      const quoteLine = {
+        SBQQ__Product__c: lineItem.CPQ_Product__c,
+        SBQQ__Quote__c: quoteId,
+        Install__c: lineItem.Install__c,
+        Access_Range__c: lineItem.CPQ_Product__r?.Access_Range__c,
+        Account__c: lineItem.Install__r?.AccountID__c,
+        Partner_Account__c: lineItem.Install__r?.Partner_Account__c,
+        Sales_Org__c: lineItem.Install__r?.CPQ_Sales_Org__c,
+        SBQQ__Quantity__c: lineItem.Quantity__c,
+        SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
+        SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
+        CPQ_License_Type__c: 'MAINT'
+      };
+
+      quoteLinesToInsert.push(quoteLine);
+    }
+
+    const result = await conn.sobject('SBQQ__QuoteLine__c').create(quoteLinesToInsert);
+    res.status(200).json({ message: 'Quote lines created', result });
+  } catch (err) {
+    console.error('Error creating quote lines:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+/*function translateLicenseType(type) {
+  
+  return type === 'Standard' ? 'STD' : 'MAINT';
+}*/
+
+function getAdjustedStartDate(dateStr) {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + 1); // Example adjustment
+  return date;
+}
+
+
 /*app.post('/create-price-book', async (req, res) => {
   const recordData = req.body;
   console.log('@@@Creat',recordData);
