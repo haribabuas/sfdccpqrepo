@@ -55,7 +55,7 @@ app.post('/create-price-book', async (req, res) => {
   });
   console.log('@@@conn'+conn);
   try {
-    const result = await conn.sobject("disw_price_book__c").create(recordData);
+    const result = await conn.sobject("contact").create(recordData);
     res.status(200).json({ message: "Record created", result });
   } catch (err) {
     res.status(500).json({ error: err.message });
