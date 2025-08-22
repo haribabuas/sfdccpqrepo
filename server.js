@@ -44,7 +44,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
   }
 });
 
-/*const jsforce = require('jsforce');
+const jsforce = require('jsforce');
 app.use(express.json());
 app.post('/create-price-book', async (req, res) => {
   const recordData = req.body;
@@ -69,7 +69,7 @@ app.post('/create-price-book', async (req, res) => {
     console.error("Insert error:", err);
     res.status(500).json({ error: err.message });
   }
-});*/
+});
 
 
 app.listen(port, () => {
