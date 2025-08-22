@@ -1,5 +1,4 @@
 var express = require('express');
-const jsforce = require('jsforce');
 var bodyParser = require('body-parser');
 var pg = require('pg');
 
@@ -45,7 +44,7 @@ app.get('/pricebook/:recordId', async (req, res) => {
   }
 });
 
-
+const jsforce = require('jsforce');
 app.use(express.json());
 app.post('/create-price-book', async (req, res) => {
   const recordData = req.body;
@@ -54,7 +53,7 @@ app.post('/create-price-book', async (req, res) => {
   const accessToken = authHeader?.split(' ')[1];
   const instanceUrl = req.headers['salesforce-instance-url'];
 
-  if (!accessToken || !instanceUrl) {
+ /* if (!accessToken || !instanceUrl) {
     return res.status(401).json({ error: 'Missing Salesforce auth info' });
   }
 
@@ -69,7 +68,7 @@ app.post('/create-price-book', async (req, res) => {
   } catch (err) {
     console.error("Insert error:", err);
     res.status(500).json({ error: err.message });
-  }
+  }*/
 });
 
 const PORT = process.env.PORT || 3000;
