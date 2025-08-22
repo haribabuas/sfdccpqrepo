@@ -62,6 +62,47 @@ app.post('/create-price-book', async (req, res) => {
   }
 });
 
+app.post('/clone-contact', async (req, res) => {
+  const { accountId } = req.body;
+  console.log('@@req ',req.body);
+  const accessToken = req.headers['authorization']?.split(' ')[1];
+  const instanceUrl = req.headers['salesforce-instance-url'];
+
+  if (!accessToken || !instanceUrl || !accountId) {
+    return res.status(400).json({ error: 'Missing required data' });
+  }
+
+  const conn = new jsforce.Connection({ accessToken, instanceUrl });
+
+  try {
+    // Query one contact related to the account
+    const contacts = await conn.query(
+      `SELECT FirstName, LastName, Email, AccountId FROM Contact WHERE AccountId = '${accountId}' LIMIT 1`
+    );
+    console.log('@@',contacts);
+    if (!contacts.records.length) {
+      return res.status(404).json({ error: 'No contact found for this account' });
+    }
+
+    const contact = contacts.records[0];
+
+    // Clone the contact (remove Id and insert)
+    const newContact = {
+      FirstName: contact.FirstName,
+      LastName: contact.LastName,
+      Email: contact.Email,
+      AccountId: contact.AccountId
+    };
+
+    const result = await conn.sobject('Contact').create(newContact);
+
+    res.status(200).json({ message: 'Contact cloned', result });
+  } catch (err) {
+    console.error('Error cloning contact:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /*app.post('/create-price-book', async (req, res) => {
   const recordData = req.body;
   console.log('@@@Creat',recordData);
