@@ -48,6 +48,22 @@ const jsforce = require('jsforce');
 app.use(express.json());
 app.post('/create-price-book', async (req, res) => {
   const recordData = req.body;
+  console.log('@@@'+recordData);
+  const conn = new jsforce.Connection({
+    accessToken: req.headers['authorization']?.split(' ')[1],
+    instanceUrl: req.headers['salesforce-instance-url']
+  });
+  console.log('@@@conn'+conn);
+  try {
+    const result = await conn.sobject("disw_price_book__c").create(recordData);
+    res.status(200).json({ message: "Record created", result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/*app.post('/create-price-book', async (req, res) => {
+  const recordData = req.body;
   console.log('@@@Creat',recordData);
   const authHeader = req.headers['authorization'];
   const accessToken = authHeader?.split(' ')[1];
@@ -69,7 +85,7 @@ app.post('/create-price-book', async (req, res) => {
     console.error("Insert error:", err);
     res.status(500).json({ error: err.message });
   }
-});
+});*/
 
 
 app.listen(port, () => {
