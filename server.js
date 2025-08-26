@@ -293,7 +293,19 @@ app.post('/get-json-from-salesforce', async (req, res) => {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
 
-    const jsonData = JSON.parse(fileRes.data);
+    let jsonData;
+
+    try {
+        if (typeof fileRes.data === 'string') {
+            jsonData = JSON.parse(fileRes.data);
+        } else {
+            jsonData = fileRes.data; // already parsed
+        }
+        } catch (err) {
+        console.error('Failed to parse JSON:', err.message);
+        return res.status(500).json({ error: 'Invalid JSON format in file' });
+    }
+
     res.status(200).json({ message: 'File retrieved successfully', data: jsonData });
 
   } catch (error) {
