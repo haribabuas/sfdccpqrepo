@@ -1,4 +1,5 @@
 var express = require('express');
+const axios = require('axios');
 var bodyParser = require('body-parser');
 var pg = require('pg');
 
@@ -236,6 +237,70 @@ function getAdjustedStartDate(dateStr) {
   date.setDate(date.getDate() + 1); // Example adjustment
   return date;
 }
+
+
+
+app.post('/get-json-from-salesforce', async (req, res) => {
+  const { parentId } = req.body;
+  const accessToken = req.headers['authorization']?.split(' ')[1];
+  const instanceUrl = req.headers['salesforce-instance-url'];
+
+  if (!parentId || !accessToken || !instanceUrl) {
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
+
+  try {
+    // Step 1: Get ContentDocumentId linked to the parent record
+    const linkQuery = `
+      SELECT ContentDocumentId 
+      FROM ContentDocumentLink 
+      WHERE LinkedEntityId = '${parentId}' 
+      ORDER BY ContentDocumentId DESC 
+      LIMIT 1
+    `;
+    const linkRes = await axios.get(
+      `${instanceUrl}/services/data/v59.0/query?q=${encodeURIComponent(linkQuery)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    const contentDocumentId = linkRes.data.records[0]?.ContentDocumentId;
+    if (!contentDocumentId) {
+      return res.status(404).json({ error: 'No file linked to this record' });
+    }
+
+    // Step 2: Get latest ContentVersionId for the document
+    const versionQuery = `
+      SELECT Id, VersionData 
+      FROM ContentVersion 
+      WHERE ContentDocumentId = '${contentDocumentId}' 
+      ORDER BY CreatedDate DESC 
+      LIMIT 1
+    `;
+    const versionRes = await axios.get(
+      `${instanceUrl}/services/data/v59.0/query?q=${encodeURIComponent(versionQuery)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    const versionId = versionRes.data.records[0]?.Id;
+    const versionDataUrl = versionRes.data.records[0]?.VersionData;
+
+    if (!versionId || !versionDataUrl) {
+      return res.status(404).json({ error: 'No version data found' });
+    }
+
+    // Step 3: Download the file content
+    const fileRes = await axios.get(`${instanceUrl}${versionDataUrl}`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const jsonData = JSON.parse(fileRes.data);
+    res.status(200).json({ message: 'File retrieved successfully', data: jsonData });
+
+  } catch (error) {
+    console.error('Error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to retrieve file' });
+  }
+});
 
 
 /*app.post('/create-price-book', async (req, res) => {
