@@ -174,26 +174,32 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    const sapLinesQuery = `
-      SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
-             CPQ_Product__c, Install__c,
-             CPQ_Product__r.Access_Range__c,
-             Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
-      FROM SAP_Install_Line_Item__c
-      WHERE Id IN (${sapLineIds.map(id => `'${id}'`).join(',')})
-    `;
+    const sapLineChunks = chunkArray(sapLineIds, 100); // Keep each query small
+    const allSapLines = [];
 
-    const sapLinesResult = await conn.query(sapLinesQuery);
+    for (const chunk of sapLineChunks) {
+      const query = `
+        SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
+               CPQ_Product__c, Install__c,
+               CPQ_Product__r.Access_Range__c,
+               Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
+        FROM SAP_Install_Line_Item__c
+        WHERE Id IN (${chunk.map(id => `'${id}'`).join(',')})
+      `;
+      const result = await conn.query(query);
+      allSapLines.push(...result.records);
+    }
+
     const quoteLinesToInsert = [];
 
-    for (const lineItem of sapLinesResult.records) {
+    for (const lineItem of allSapLines) {
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
         : new Date();
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 12);
 
-      const quoteLine = {
+      quoteLinesToInsert.push({
         SBQQ__Product__c: lineItem.CPQ_Product__c,
         SBQQ__Quote__c: quoteId,
         Install__c: lineItem.Install__c,
@@ -205,15 +211,13 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
         SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
         CPQ_License_Type__c: 'MAINT'
-      };
-
-      quoteLinesToInsert.push(quoteLine);
+      });
     }
 
-    const chunks = chunkArray(quoteLinesToInsert, 200);
+    const quoteLineChunks = chunkArray(quoteLinesToInsert, 200);
     const allResults = [];
 
-    for (const chunk of chunks) {
+    for (const chunk of quoteLineChunks) {
       const result = await conn.sobject('SBQQ__QuoteLine__c').create(chunk);
       allResults.push(...result);
     }
@@ -224,6 +228,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 function getAdjustedStartDate(dateStr) {
