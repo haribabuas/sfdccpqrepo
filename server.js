@@ -248,9 +248,9 @@ app.post('/get-json-from-salesforce', async (req, res) => {
   if (!parentId || !accessToken || !instanceUrl) {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
-
+    console.log('@@req.body',req.body);
   try {
-    // Step 1: Get ContentDocumentId linked to the parent record
+   
     const linkQuery = `
       SELECT ContentDocumentId 
       FROM ContentDocumentLink 
@@ -262,13 +262,13 @@ app.post('/get-json-from-salesforce', async (req, res) => {
       `${instanceUrl}/services/data/v59.0/query?q=${encodeURIComponent(linkQuery)}`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
-
+    console.log('@@linkRes',linkRes);
     const contentDocumentId = linkRes.data.records[0]?.ContentDocumentId;
     if (!contentDocumentId) {
       return res.status(404).json({ error: 'No file linked to this record' });
     }
 
-    // Step 2: Get latest ContentVersionId for the document
+   console.log('@@contentDocumentId',contentDocumentId);
     const versionQuery = `
       SELECT Id, VersionData 
       FROM ContentVersion 
@@ -283,7 +283,7 @@ app.post('/get-json-from-salesforce', async (req, res) => {
 
     const versionId = versionRes.data.records[0]?.Id;
     const versionDataUrl = versionRes.data.records[0]?.VersionData;
-
+    console.log('@@versionId',versionId);
     if (!versionId || !versionDataUrl) {
       return res.status(404).json({ error: 'No version data found' });
     }
