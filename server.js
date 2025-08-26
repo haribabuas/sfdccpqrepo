@@ -154,6 +154,14 @@ app.post('/create-quote-lines', async (req, res) => {
   }
 });
 
+function chunkArray(array, size) {
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+  return result;
+}
+
 app.post('/create-quote-lines-sap', async (req, res) => {
   const { quoteId, sapLineIds } = req.body;
   const accessToken = req.headers['authorization']?.split(' ')[1];
@@ -166,7 +174,6 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    
     const sapLinesQuery = `
       SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
              CPQ_Product__c, Install__c,
@@ -180,8 +187,6 @@ app.post('/create-quote-lines-sap', async (req, res) => {
     const quoteLinesToInsert = [];
 
     for (const lineItem of sapLinesResult.records) {
-      
-
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
         : new Date();
@@ -205,13 +210,21 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       quoteLinesToInsert.push(quoteLine);
     }
 
-    const result = await conn.sobject('SBQQ__QuoteLine__c').create(quoteLinesToInsert);
-    res.status(200).json({ message: 'Quote lines created', result });
+    const chunks = chunkArray(quoteLinesToInsert, 200);
+    const allResults = [];
+
+    for (const chunk of chunks) {
+      const result = await conn.sobject('SBQQ__QuoteLine__c').create(chunk);
+      allResults.push(...result);
+    }
+
+    res.status(200).json({ message: 'Quote lines created', result: allResults });
   } catch (err) {
     console.error('Error creating quote lines:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 function getAdjustedStartDate(dateStr) {
   const date = new Date(dateStr);
