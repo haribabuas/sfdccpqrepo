@@ -76,7 +76,7 @@ app.post('/clone-contact', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    // Query one contact related to the account
+    
     const contacts = await conn.query(
       `SELECT FirstName, LastName, Email, AccountId FROM Contact WHERE AccountId = '${accountId}' LIMIT 1`
     );
@@ -87,7 +87,7 @@ app.post('/clone-contact', async (req, res) => {
 
     const contact = contacts.records[0];
 
-    // Clone the contact (remove Id and insert)
+   
     const newContact = {
       FirstName: contact.FirstName,
       LastName: contact.LastName,
@@ -175,7 +175,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    const sapLineChunks = chunkArray(sapLineIds, 100); // Keep each query small
+    const sapLineChunks = chunkArray(sapLineIds, 200); 
     const allSapLines = [];
 
     for (const chunk of sapLineChunks) {
@@ -234,7 +234,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
 
 function getAdjustedStartDate(dateStr) {
   const date = new Date(dateStr);
-  date.setDate(date.getDate() + 1); // Example adjustment
+  date.setDate(date.getDate() + 1);
   return date;
 }
 
@@ -288,7 +288,7 @@ app.post('/get-json-from-salesforce', async (req, res) => {
       return res.status(404).json({ error: 'No version data found' });
     }
 
-    // Step 3: Download the file content
+    
     const fileRes = await axios.get(`${instanceUrl}${versionDataUrl}`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
@@ -299,7 +299,7 @@ app.post('/get-json-from-salesforce', async (req, res) => {
         if (typeof fileRes.data === 'string') {
             jsonData = JSON.parse(fileRes.data);
         } else {
-            jsonData = fileRes.data; // already parsed
+            jsonData = fileRes.data;
         }
         } catch (err) {
         console.error('Failed to parse JSON:', err.message);
