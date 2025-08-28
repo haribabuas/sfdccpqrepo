@@ -175,9 +175,10 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    const sapLineChunks = chunkArray(sapLineIds, 200);
+    const sapLineChunks = chunkArray(sapLineIds, 200); 
+    const allSapLines = [];
 
-    const sapLineQueries = sapLineChunks.map(chunk => {
+    for (const chunk of sapLineChunks) {
       const query = `
         SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
                CPQ_Product__c, Install__c,
@@ -186,20 +187,20 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         FROM SAP_Install_Line_Item__c
         WHERE Id IN (${chunk.map(id => `'${id}'`).join(',')})
       `;
-      return conn.query(query);
-    });
+      const result = await conn.query(query);
+      allSapLines.push(...result.records);
+    }
 
-    const queryResults = await Promise.all(sapLineQueries);
-    const allSapLines = queryResults.flatMap(result => result.records);
+    const quoteLinesToInsert = [];
 
-    const quoteLinesToInsert = allSapLines.map(lineItem => {
+    for (const lineItem of allSapLines) {
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
         : new Date();
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 12);
 
-      return {
+      quoteLinesToInsert.push({
         SBQQ__Product__c: lineItem.CPQ_Product__c,
         SBQQ__Quote__c: quoteId,
         Install__c: lineItem.Install__c,
@@ -211,17 +212,18 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
         SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
         CPQ_License_Type__c: 'MAINT'
-      };
-    });
+      });
+    }
 
     const quoteLineChunks = chunkArray(quoteLinesToInsert, 200);
-    const insertResults = await Promise.all(
-      quoteLineChunks.map(chunk => conn.sobject('SBQQ__QuoteLine__c').create(chunk))
-    );
+    const allResults = [];
 
-    const allResults = insertResults.flat();
+    for (const chunk of quoteLineChunks) {
+      const result = await conn.sobject('SBQQ__QuoteLine__c').create(chunk);
+      allResults.push(...result);
+    }
 
-    res.status(200).json({ message: 'Quote lines created', result: allResults.rows.length });
+    res.status(200).json({ message: 'Quote lines created', result: allResults });
   } catch (err) {
     console.error('Error creating quote lines:', err);
     res.status(500).json({ error: err.message });
