@@ -203,7 +203,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       };
 
       quoteLinesToInsert.push(quoteLine);
-      console.log('@@@size',quoteLinesToInsert.size());
+      console.log('@@@size',quoteLinesToInsert.length);
     }
 
     const result = await conn.sobject('SBQQ__QuoteLine__c').create(quoteLinesToInsert);
