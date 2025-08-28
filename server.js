@@ -221,7 +221,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
 
     const allResults = insertResults.flat();
 
-    res.status(200).json({ message: 'Quote lines created', result: allResults.size() });
+    res.status(200).json({ message: 'Quote lines created', result: allResults.rows.length });
   } catch (err) {
     console.error('Error creating quote lines:', err);
     res.status(500).json({ error: err.message });
