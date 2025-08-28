@@ -1,5 +1,4 @@
 var express = require('express');
-const axios = require('axios');
 var bodyParser = require('body-parser');
 var pg = require('pg');
 
@@ -76,7 +75,7 @@ app.post('/clone-contact', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    
+    // Query one contact related to the account
     const contacts = await conn.query(
       `SELECT FirstName, LastName, Email, AccountId FROM Contact WHERE AccountId = '${accountId}' LIMIT 1`
     );
@@ -87,7 +86,7 @@ app.post('/clone-contact', async (req, res) => {
 
     const contact = contacts.records[0];
 
-   
+    // Clone the contact (remove Id and insert)
     const newContact = {
       FirstName: contact.FirstName,
       LastName: contact.LastName,
@@ -155,14 +154,6 @@ app.post('/create-quote-lines', async (req, res) => {
   }
 });
 
-function chunkArray(array, size) {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
-}
-
 app.post('/create-quote-lines-sap', async (req, res) => {
   const { quoteId, sapLineIds } = req.body;
   const accessToken = req.headers['authorization']?.split(' ')[1];
@@ -175,32 +166,29 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    const sapLineChunks = chunkArray(sapLineIds, 100); 
-    const allSapLines = [];
+    
+    const sapLinesQuery = `
+      SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
+             CPQ_Product__c, Install__c,
+             CPQ_Product__r.Access_Range__c,
+             Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
+      FROM SAP_Install_Line_Item__c
+      WHERE Id IN (${sapLineIds.map(id => `'${id}'`).join(',')})
+    `;
 
-    for (const chunk of sapLineChunks) {
-      const query = `
-        SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
-               CPQ_Product__c, Install__c,
-               CPQ_Product__r.Access_Range__c,
-               Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
-        FROM SAP_Install_Line_Item__c
-        WHERE Id IN (${chunk.map(id => `'${id}'`).join(',')})
-      `;
-      const result = await conn.query(query);
-      allSapLines.push(...result.records);
-    }
-
+    const sapLinesResult = await conn.query(sapLinesQuery);
     const quoteLinesToInsert = [];
 
-    for (const lineItem of allSapLines) {
+    for (const lineItem of sapLinesResult.records) {
+      
+
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
         : new Date();
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 12);
 
-      quoteLinesToInsert.push({
+      const quoteLine = {
         SBQQ__Product__c: lineItem.CPQ_Product__c,
         SBQQ__Quote__c: quoteId,
         Install__c: lineItem.Install__c,
@@ -212,107 +200,25 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
         SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
         CPQ_License_Type__c: 'MAINT'
-      });
+      };
+
+      quoteLinesToInsert.push(quoteLine);
+      console.log('@@@size',quoteLinesToInsert.size());
     }
 
-    const quoteLineChunks = chunkArray(quoteLinesToInsert, 100);
-    const allResults = [];
-
-    for (const chunk of quoteLineChunks) {
-      const result = await conn.sobject('SBQQ__QuoteLine__c').create(chunk);
-      allResults.push(...result);
-    }
-
-    res.status(200).json({ message: 'Quote lines created', result: allResults });
+    const result = await conn.sobject('SBQQ__QuoteLine__c').create(quoteLinesToInsert);
+    res.status(200).json({ message: 'Quote lines created', result });
   } catch (err) {
     console.error('Error creating quote lines:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-
-
 function getAdjustedStartDate(dateStr) {
   const date = new Date(dateStr);
-  date.setDate(date.getDate() + 1);
+  date.setDate(date.getDate() + 1); // Example adjustment
   return date;
 }
-
-
-
-app.post('/get-json-from-salesforce', async (req, res) => {
-  const { parentId } = req.body;
-  const accessToken = req.headers['authorization']?.split(' ')[1];
-  const instanceUrl = req.headers['salesforce-instance-url'];
-
-  if (!parentId || !accessToken || !instanceUrl) {
-    return res.status(400).json({ error: 'Missing required parameters' });
-  }
-    console.log('@@req.body',req.body);
-  try {
-   
-    const linkQuery = `
-      SELECT ContentDocumentId 
-      FROM ContentDocumentLink 
-      WHERE LinkedEntityId = '${parentId}' 
-      ORDER BY ContentDocumentId DESC 
-      LIMIT 1
-    `;
-    const linkRes = await axios.get(
-      `${instanceUrl}/services/data/v59.0/query?q=${encodeURIComponent(linkQuery)}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    console.log('@@linkRes',linkRes);
-    const contentDocumentId = linkRes.data.records[0]?.ContentDocumentId;
-    if (!contentDocumentId) {
-      return res.status(404).json({ error: 'No file linked to this record' });
-    }
-
-   console.log('@@contentDocumentId',contentDocumentId);
-    const versionQuery = `
-      SELECT Id, VersionData 
-      FROM ContentVersion 
-      WHERE ContentDocumentId = '${contentDocumentId}' 
-      ORDER BY CreatedDate DESC 
-      LIMIT 1
-    `;
-    const versionRes = await axios.get(
-      `${instanceUrl}/services/data/v59.0/query?q=${encodeURIComponent(versionQuery)}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-
-    const versionId = versionRes.data.records[0]?.Id;
-    const versionDataUrl = versionRes.data.records[0]?.VersionData;
-    console.log('@@versionId',versionId);
-    if (!versionId || !versionDataUrl) {
-      return res.status(404).json({ error: 'No version data found' });
-    }
-
-    
-    const fileRes = await axios.get(`${instanceUrl}${versionDataUrl}`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-
-    let jsonData;
-
-    try {
-        if (typeof fileRes.data === 'string') {
-            jsonData = JSON.parse(fileRes.data);
-        } else {
-            jsonData = fileRes.data;
-        }
-        } catch (err) {
-        console.error('Failed to parse JSON:', err.message);
-        return res.status(500).json({ error: 'Invalid JSON format in file' });
-    }
-
-    res.status(200).json({ message: 'File retrieved successfully', data: jsonData });
-
-  } catch (error) {
-    console.error('Error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to retrieve file' });
-  }
-});
 
 
 /*app.post('/create-price-book', async (req, res) => {
