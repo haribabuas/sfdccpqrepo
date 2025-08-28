@@ -154,6 +154,14 @@ app.post('/create-quote-lines', async (req, res) => {
   }
 });
 
+function chunkArray(array, size) {
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+  return result;
+}
+
 app.post('/create-quote-lines-sap', async (req, res) => {
   const { quoteId, sapLineIds } = req.body;
   const accessToken = req.headers['authorization']?.split(' ')[1];
@@ -166,7 +174,6 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    
     const sapLinesQuery = `
       SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
              CPQ_Product__c, Install__c,
@@ -180,15 +187,13 @@ app.post('/create-quote-lines-sap', async (req, res) => {
     const quoteLinesToInsert = [];
 
     for (const lineItem of sapLinesResult.records) {
-      
-
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
         : new Date();
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 12);
 
-      const quoteLine = {
+      quoteLinesToInsert.push({
         SBQQ__Product__c: lineItem.CPQ_Product__c,
         SBQQ__Quote__c: quoteId,
         Install__c: lineItem.Install__c,
@@ -200,14 +205,18 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
         SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
         CPQ_License_Type__c: 'MAINT'
-      };
-
-      quoteLinesToInsert.push(quoteLine);
-      console.log('@@@size',quoteLinesToInsert.length);
+      });
     }
 
-    const result = await conn.sobject('SBQQ__QuoteLine__c').create(quoteLinesToInsert);
-    res.status(200).json({ message: 'Quote lines created', result });
+    const batches = chunkArray(quoteLinesToInsert, 200);
+    const results = [];
+
+    for (const batch of batches) {
+      const result = await conn.sobject('SBQQ__QuoteLine__c').create(batch);
+      results.push(...result);
+    }
+
+    res.status(200).json({ message: 'Quote lines created', totalInserted: results.length });
   } catch (err) {
     console.error('Error creating quote lines:', err);
     res.status(500).json({ error: err.message });
