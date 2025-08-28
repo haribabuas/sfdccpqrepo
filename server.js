@@ -175,7 +175,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
-    const sapLineChunks = chunkArray(sapLineIds, 200); 
+    const sapLineChunks = chunkArray(sapLineIds, 100); 
     const allSapLines = [];
 
     for (const chunk of sapLineChunks) {
@@ -215,7 +215,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       });
     }
 
-    const quoteLineChunks = chunkArray(quoteLinesToInsert, 200);
+    const quoteLineChunks = chunkArray(quoteLinesToInsert, 100);
     const allResults = [];
 
     for (const chunk of quoteLineChunks) {
