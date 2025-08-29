@@ -154,7 +154,7 @@ app.post('/create-quote-lines', async (req, res) => {
   }
 });
 
-function chunkArray(array, size) {
+function chunkArray2(array, size) {
   const result = [];
   for (let i = 0; i < array.length; i += size) {
     result.push(array.slice(i, i + size));
@@ -173,20 +173,34 @@ app.post('/create-quote-lines-sap', async (req, res) => {
 
   const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
-  try {
-    const sapLinesQuery = `
-      SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
-             CPQ_Product__c, Install__c,
-             CPQ_Product__r.Access_Range__c,
-             Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
-      FROM SAP_Install_Line_Item__c
-      WHERE Id IN (${sapLineIds.map(id => `'${id}'`).join(',')})
-    `;
+  const chunkArray = (array, size) => {
+    const result = [];
+    for (let i = 0; i < array.length; i += size) {
+      result.push(array.slice(i, i + size));
+    }
+    return result;
+  };
 
-    const sapLinesResult = await conn.query(sapLinesQuery);
+  try {
+    const sapLinesChunks = chunkArray(sapLineIds, 100);
+    const allSapLines = [];
+
+    for (const chunk of sapLinesChunks) {
+      const sapLinesQuery = `
+        SELECT Id, License_Type__c, Quantity__c, End_Date_Consolidated__c,
+               CPQ_Product__c, Install__c,
+               CPQ_Product__r.Access_Range__c,
+               Install__r.AccountID__c, Install__r.Partner_Account__c, Install__r.CPQ_Sales_Org__c
+        FROM SAP_Install_Line_Item__c
+        WHERE Id IN (${chunk.map(id => `'${id}'`).join(',')})
+      `;
+      const result = await conn.query(sapLinesQuery);
+      allSapLines.push(...result.records);
+    }
+
     const quoteLinesToInsert = [];
 
-    for (const lineItem of sapLinesResult.records) {
+    for (const lineItem of allSapLines) {
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
         : new Date();
