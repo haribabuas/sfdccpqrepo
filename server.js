@@ -214,23 +214,15 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       };
     });
 
-    const quoteLineChunks = chunkArray(quoteLinesToInsert, 50);
-    const insertResults = await Promise.all(
-  quoteLineChunks.map(chunk => conn.sobject('SBQQ__QuoteLine__c').create(chunk))
-);
+    const batches = chunkArray(quoteLinesToInsert, 200);
+    const results = [];
 
-insertResults.forEach((result, index) => {
-  result.forEach((res, i) => {
-    if (!res.success) {
-      console.error(`Insert failed for record ${i} in chunk ${index}:`, res.errors);
+    for (const batch of batches) {
+      const result = await conn.sobject('SBQQ__QuoteLine__c').create(batch);
+      results.push(...result);
     }
-  });
-});
 
-
-    const allResults = insertResults.flat();
-
-    res.status(200).json({ message: 'Quote lines created', totalInserted: allResults.length});
+    res.status(200).json({ message: 'Quote lines created', totalInserted: results.length });
   } catch (err) {
     console.error('Error creating quote lines:', err);
     res.status(500).json({ error: err.message });
