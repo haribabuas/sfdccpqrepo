@@ -214,7 +214,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       };
     });
 
-    const quoteLineChunks = chunkArray(quoteLinesToInsert, 200);
+    const quoteLineChunks = chunkArray(quoteLinesToInsert, 50);
     const insertResults = await Promise.all(
   quoteLineChunks.map(chunk => conn.sobject('SBQQ__QuoteLine__c').create(chunk))
 );
