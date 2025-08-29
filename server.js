@@ -191,7 +191,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
 
     const queryResults = await Promise.all(sapLineQueries);
     const allSapLines = queryResults.flatMap(result => result.records);
-
+    console.log(`Total SAP lines fetched: ${allSapLines.length}`);
     const quoteLinesToInsert = allSapLines.map(lineItem => {
       const startDate = lineItem.End_Date_Consolidated__c
         ? getAdjustedStartDate(lineItem.End_Date_Consolidated__c)
@@ -216,8 +216,17 @@ app.post('/create-quote-lines-sap', async (req, res) => {
 
     const quoteLineChunks = chunkArray(quoteLinesToInsert, 200);
     const insertResults = await Promise.all(
-      quoteLineChunks.map(chunk => conn.sobject('SBQQ__QuoteLine__c').create(chunk))
-    );
+  quoteLineChunks.map(chunk => conn.sobject('SBQQ__QuoteLine__c').create(chunk))
+);
+
+insertResults.forEach((result, index) => {
+  result.forEach((res, i) => {
+    if (!res.success) {
+      console.error(`Insert failed for record ${i} in chunk ${index}:`, res.errors);
+    }
+  });
+});
+
 
     const allResults = insertResults.flat();
 
