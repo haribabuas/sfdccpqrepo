@@ -238,7 +238,6 @@ function getAdjustedStartDate(dateStr) {
 }
 
 
-
 app.post('/get-json-from-salesforce', async (req, res) => {
   const { parentId } = req.body;
   const accessToken = req.headers['authorization']?.split(' ')[1];
