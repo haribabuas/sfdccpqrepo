@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Create Quote Lines from SAP
+  description: Creates SBQQ__QuoteLine__c records in Salesforce based on SAP_Install_Line_Item__c data.
+  version: 1.0.0
+
+servers:
+  - url: https://sfdccpq-cce3ffe89c28.herokuapp.com/
+    description: Heroku App Base URL
+
+paths:
+  /create-quote-lines-sap:
+    post:
+      summary: Create Quote Lines in Salesforce
+      description: Fetches SAP install line items and creates corresponding quote lines in Salesforce.
+      operationId: createQuoteLinesSAP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quoteId
+                - sapLineIds
+              properties:
+                quoteId:
+                  type: string
+                  description: Salesforce Quote ID
+                sapLineIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of SAP Install Line Item IDs
+      parameters:
+        - name: authorization
+          in: header
+          required: true
+          description: Bearer token for Salesforce access
+          schema:
+            type: string
+        - name: salesforce-instance-url
+          in: header
+          required: true
+          description: Salesforce instance URL
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Quote lines created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  totalInserted:
+                    type: integer
+        '400':
+          description: Missing required data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
