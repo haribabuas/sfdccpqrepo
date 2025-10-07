@@ -165,6 +165,9 @@ function chunkArray(array, size) {
 
 app.post('/create-quote-lines-sap', async (req, res) => {
   const { quoteId, sapLineIds } = req.body;
+  console.log('Incoming request body:', req.body);
+  console.log('Authorization header:', req.headers['authorization']);
+  console.log('Salesforce instance URL:', req.headers['salesforce-instance-url']);
   const accessToken = req.headers['authorization']?.split(' ')[1];
   const instanceUrl = req.headers['salesforce-instance-url'];
 
