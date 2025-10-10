@@ -168,8 +168,8 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   console.log('Incoming request body:', req.body);
   console.log('Authorization header:', req.headers['authorization']);
   console.log('Salesforce instance URL:', req.headers['salesforce-instance-url']);
-  const accessToken = req.headers['authorization']?.split(' ')[1];
-  const instanceUrl = req.headers['salesforce-instance-url'];
+  const accessToken = req.headers['authorization']; //req.headers['authorization']?.split(' ')[1];
+  const instanceUrl = req.headers['salesforce-instance-url']; //req.headers['salesforce-instance-url'];
 
   if (!accessToken || !instanceUrl || !quoteId || !sapLineIds?.length) {
     return res.status(400).json({ error: 'Missing required data' });
