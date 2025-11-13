@@ -1,14 +1,11 @@
-var express = require('express');
-const axios = require('axios');
-var bodyParser = require('body-parser');
-var pg = require('pg');
+const express = require('express');
 const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
-var app = express();
+const app = express();
 
 const port = process.env.PORT || 3000;
+
 app.use(express.json());
 app.use(sdkMiddleware());
-
 
 function chunkArray(array, size) {
   const result = [];
@@ -19,12 +16,17 @@ function chunkArray(array, size) {
 }
 
 app.post('/create-quote-lines-sap', async (req, res) => {
-  const { quoteId, sapLineIds } = req.body;
-  const { event, context, logger } = req.sdk;
-  console.log('Incoming request body:', req.body);
-  const org = context.org;
-    console.log('Org detaisl:', org);
-    logger.info(`Querying Quote with Id: ${quoteId} from org ${org.id}`);
+  try {
+    const { quoteId, sapLineIds } = req.body;
+    const { event, context, logger } = req.sdk;
+
+    if (!quoteId || !sapLineIds || sapLineIds.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Missing quoteId or sapLineIds' });
+    }
+
+    logger.info(`Processing Quote: ${quoteId}`);
+    const org = context.org;
+
     const sapLineChunks = chunkArray(sapLineIds, 200);
 
     const sapLineQueries = sapLineChunks.map(chunk => {
@@ -36,17 +38,26 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         FROM SAP_Install_Line_Item__c
         WHERE Id IN (${chunk.map(id => `'${id}'`).join(',')})
       `;
-       return org.dataApi.query(query);
-      //return conn.query(query);
+      return org.dataApi.query(query);
     });
 
     const queryResults = await Promise.all(sapLineQueries);
     const allSapLines = queryResults.flatMap(result => result.records);
-    console.log(`Total SAP lines fetched: ${allSapLines.length}`);
-    
+
+    logger.info(`Total SAP lines fetched: ${allSapLines.length}`);
+
+    return res.json({
+      status: 'success',
+      quoteId,
+      totalLines: allSapLines.length,
+      sapLines: allSapLines
+    });
+  } catch (error) {
+    console.error('Error fetching SAP lines:', error);
+    return res.status(500).json({ status: 'error', message: error.message });
+  }
 });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
