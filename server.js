@@ -1,5 +1,5 @@
 const express = require('express');
-const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
+//const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
 const app = express();
 
 const port = process.env.PORT || 3000;
@@ -19,14 +19,14 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   try {
     const { quoteId, sapLineIds } = req.body;
     const { event, context, logger } = req.sdk;
-
+    console.log('@@@quoteId ',quoteId);
     if (!quoteId || !sapLineIds || sapLineIds.length === 0) {
       return res.status(400).json({ status: 'error', message: 'Missing quoteId or sapLineIds' });
     }
 
     logger.info(`Processing Quote: ${quoteId}`);
     const org = context.org;
-
+    console.log('@@@org ',org);
     const sapLineChunks = chunkArray(sapLineIds, 200);
 
     const sapLineQueries = sapLineChunks.map(chunk => {
