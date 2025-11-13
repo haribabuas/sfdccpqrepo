@@ -2,10 +2,12 @@ var express = require('express');
 const axios = require('axios');
 var bodyParser = require('body-parser');
 var pg = require('pg');
-
+const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
 var app = express();
 
 const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use(sdkMiddleware());
 console.log('2233Se',process.env.DATABASE_URL);
 var connectionString = "postgres://u53mp4qmcr9ml5:p93b5813abff26b78ce5d548dd5d36f08311d35026ff75c23f7095301e9a608e1@c7itisjfjj8ril.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/dakm542hgqntso";
 
@@ -165,19 +167,23 @@ function chunkArray(array, size) {
 
 app.post('/create-quote-lines-sap', async (req, res) => {
   const { quoteId, sapLineIds } = req.body;
+  const { event, context, logger } = req.sdk;
   console.log('Incoming request body:', req.body);
-  console.log('Authorization header:', req.headers['authorization']);
-  console.log('Salesforce instance URL:', req.headers['salesforce-instance-url']);
-  const accessToken = req.headers['authorization']; //req.headers['authorization']?.split(' ')[1];
-  const instanceUrl = req.headers['salesforce-instance-url']; //req.headers['salesforce-instance-url'];
+  //console.log('Authorization header:', req.headers['authorization']);
+  // console.log('Salesforce instance URL:', req.headers['salesforce-instance-url']);
+ // const accessToken = req.headers['authorization']; //req.headers['authorization']?.split(' ')[1];
+  // const instanceUrl = req.headers['salesforce-instance-url']; //req.headers['salesforce-instance-url'];
 
-  if (!accessToken || !instanceUrl || !quoteId || !sapLineIds?.length) {
-    return res.status(400).json({ error: 'Missing required data' });
-  }
+  //if (!accessToken || !instanceUrl || !quoteId || !sapLineIds?.length) {
+  //  return res.status(400).json({ error: 'Missing required data' });
+  //}
 
-  const conn = new jsforce.Connection({ accessToken, instanceUrl });
+  //const conn = new jsforce.Connection({ accessToken, instanceUrl });
 
   try {
+    const org = context.org;
+    console.log('Org detaisl:', org);
+    logger.info(`Querying Quote with Id: ${recordId} from org ${org.id}`);
     const sapLineChunks = chunkArray(sapLineIds, 200);
 
     const sapLineQueries = sapLineChunks.map(chunk => {
@@ -189,7 +195,8 @@ app.post('/create-quote-lines-sap', async (req, res) => {
         FROM SAP_Install_Line_Item__c
         WHERE Id IN (${chunk.map(id => `'${id}'`).join(',')})
       `;
-      return conn.query(query);
+       return org.dataApi.query(query);
+      //return conn.query(query);
     });
 
     const queryResults = await Promise.all(sapLineQueries);
