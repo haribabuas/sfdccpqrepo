@@ -1,5 +1,5 @@
 const express = require('express');
-//const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
+const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
 const app = express();
 
 const port = process.env.PORT || 3000;
@@ -16,6 +16,7 @@ function chunkArray(array, size) {
 }
 
 app.post('/create-quote-lines-sap', async (req, res) => {
+  console.log('@@@',req.sdk);
   try {
     const { quoteId, sapLineIds } = req.body;
     const { event, context, logger } = req.sdk;
