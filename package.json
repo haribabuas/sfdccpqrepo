@@ -12,16 +12,6 @@
     "@heroku/salesforce-sdk-nodejs": "*",
     "axios": "^1.6.0"
   },
-
-  "overrides": {
-    "serialize-javascript": "6.0.2",
-    "tmp": "0.2.4",
-    "external-editor": "3.1.0",
-    "inquirer": "9.3.8",
-    "jsforce": "2.0.0-beta.30",
-    "@heroku/salesforce-sdk-nodejs": "latest"
-  },
-
   "engines": {
   "node": ">=16.x"
   }
