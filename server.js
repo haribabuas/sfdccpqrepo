@@ -32,13 +32,15 @@ app.post('/create-quote-lines-sap', async (req, res) => {
     if (!connectionNames.includes(emptyOrgName)) {
       return res.status(400).send('empty-org connection not found')
     }
-
+    
     // Initialize connection for empty-org
-    const org = await sdk.addons.applink.getAuthorization(emptyOrgName)
+    const org = await sdk.addons.applink.getAuthorization(emptyOrgName);
+    console.log('@@@org',org);
     console.log('Connected to empty-org:', {
       orgId: org.id,
       username: org.user.username
-    })
+    });
+
   try {
     const { quoteId, sapLineIds } = req.body;
     const { event, context, logger } = req.sdk;
