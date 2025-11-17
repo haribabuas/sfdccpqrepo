@@ -64,3 +64,16 @@ app.post('/create-quote-lines-sap', async (req, res) => {
     res.status(500).send(error.message)
   }
 })
+
+const server = app.listen(port, () => {
+  console.log(`Listening on ${port}`)
+})
+
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: gracefully shutting down')
+  if (server) {
+    server.close(() => {
+      console.log('HTTP server closed')
+    })
+  }
+})
