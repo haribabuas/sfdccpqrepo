@@ -9,6 +9,7 @@ const app = express()
 
 // Initialize Salesforce SDK
 const sdk = init();
+console.log('@@@sdkini',sdk);
 // Get connection names from environment variable
 const connectionNames = process.env.CONNECTION_NAMES ? process.env.CONNECTION_NAMES.split(',') : []
 console.log('@@@connectionNames',connectionNames);
@@ -33,14 +34,13 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       return res.status(400).send('empty-org connection not found')
     }
     
-    // Initialize connection for empty-org
-    const org = await sdk.addons.applink.getAuthorization(emptyOrgName);
-    console.log('@@@org',org);
-    console.log('Connected to empty-org:', {
-      orgId: org.id,
-      username: org.user.username
-    });
-
+      try {
+      const org = await sdk.addons.applink.getAuthorization(emptyOrgName);
+      console.log('@@@org', org);
+    } catch (err) {
+      console.error('Authorization error:', err);
+    }
+  
   try {
     const { quoteId, sapLineIds } = req.body;
     const { event, context, logger } = req.sdk;
