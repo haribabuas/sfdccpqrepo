@@ -27,7 +27,7 @@ function chunkArray(array, size) {
 }
 
 app.post('/create-quote-lines-sap', async (req, res) => {
-  const emptyOrgName = 'devcpq-org'
+ /* const emptyOrgName = 'devcpq-org'
     console.log('@@@emptyOrgName',emptyOrgName);
     console.log('@@@reqsdk',req);
     if (!connectionNames.includes(emptyOrgName)) {
@@ -39,7 +39,7 @@ app.post('/create-quote-lines-sap', async (req, res) => {
       console.log('@@@org', org);
     } catch (err) {
       console.error('Authorization error:', err);
-    }
+    }*/
   
   try {
     const { quoteId, sapLineIds } = req.body;
