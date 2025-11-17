@@ -6,7 +6,7 @@ const { init } = require('@heroku/applink')
 
 const port = process.env.PORT || 5006
 const app = express()
-
+app.use(express.json());
 // Initialize Salesforce SDK
 const sdk = init();
 console.log('@@@sdkini',sdk);
