@@ -11,7 +11,7 @@ const app = express()
 const sdk = init();
 // Get connection names from environment variable
 const connectionNames = process.env.CONNECTION_NAMES ? process.env.CONNECTION_NAMES.split(',') : []
-
+console.log('@@@connectionNames',connectionNames);
 app.use(express.static(path.join(__dirname, 'public')))
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
@@ -27,7 +27,8 @@ function chunkArray(array, size) {
 
 app.post('/create-quote-lines-sap', async (req, res) => {
   const emptyOrgName = 'devcpq-org'
-    
+    console.log('@@@emptyOrgName',emptyOrgName);
+    console.log('@@@reqsdk',req);
     if (!connectionNames.includes(emptyOrgName)) {
       return res.status(400).send('empty-org connection not found')
     }
