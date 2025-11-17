@@ -11,7 +11,10 @@ app.use(express.json());
 // Initialize Salesforce SDK
 const sdk = init();
 console.log('@@@sdkini',sdk);
-app.use(sdk.express());
+app.use((req, res, next) => {
+  req.sdk = sdk; // Attach initialized SDK to request
+  next();
+});
 // Get connection names from environment variable
 const connectionNames = process.env.CONNECTION_NAMES ? process.env.CONNECTION_NAMES.split(',') : []
 console.log('@@@connectionNames',connectionNames);
