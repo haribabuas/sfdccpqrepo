@@ -1,11 +1,21 @@
+require('dotenv').config();
 const express = require('express');
-const { sdkMiddleware } = require('@heroku/salesforce-sdk-nodejs');
-const app = express();
+const path = require('path')
+const { init } = require('@heroku/applink')
 
-const port = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(sdkMiddleware());
+const port = process.env.PORT || 5006
+const app = express()
+
+// Initialize Salesforce SDK
+const sdk = init();
+// Get connection names from environment variable
+const connectionNames = process.env.CONNECTION_NAMES ? process.env.CONNECTION_NAMES.split(',') : []
+
+app.use(express.static(path.join(__dirname, 'public')))
+app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'ejs')
+
 
 function chunkArray(array, size) {
   const result = [];
@@ -16,7 +26,18 @@ function chunkArray(array, size) {
 }
 
 app.post('/create-quote-lines-sap', async (req, res) => {
-  console.log('@@@',req.sdk);
+  const emptyOrgName = 'devcpq-org'
+    
+    if (!connectionNames.includes(emptyOrgName)) {
+      return res.status(400).send('empty-org connection not found')
+    }
+
+    // Initialize connection for empty-org
+    const org = await sdk.addons.applink.getAuthorization(emptyOrgName)
+    console.log('Connected to empty-org:', {
+      orgId: org.id,
+      username: org.user.username
+    })
   try {
     const { quoteId, sapLineIds } = req.body;
     const { event, context, logger } = req.sdk;
