@@ -20,6 +20,8 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   const accountsByOrg = await Promise.all(
   connectionNames.map(async (connectionName) => {
     try {
+      console.log('SDK initialized:', sdk.addons.applink);
+console.log('Connection names:', connectionNames);
       const org = await sdk.addons.applink.getAuthorization(connectionName.trim());
 if (!org || !org.dataApi) {
   throw new Error(`Org ${connectionName} is not properly authorized`);
