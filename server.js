@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express')
 const path = require('path');
 const { init } = require('@heroku/applink');
+const jsforce = require('jsforce');
 const salesforcesdk = require('@heroku/salesforce-sdk-nodejs');
 
 const port = process.env.PORT || 5006
