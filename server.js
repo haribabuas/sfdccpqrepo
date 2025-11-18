@@ -17,52 +17,38 @@ app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
 app.post('/create-quote-lines-sap', async (req, res) => {
-  try {
-    // Query accounts from all connected orgs
-    const accountsByOrg = await Promise.all(
-      connectionNames.map(async (connectionName) => {
-        try {
-          // Initialize connection for this org
-          const org = await sdk.addons.applink.getAuthorization(connectionName.trim())
-          console.log('Connected to Salesforce org:', {
-            orgId: org.id,
-            username: org.user.username
-          })
+  const accountsByOrg = await Promise.all(
+  connectionNames.map(async (connectionName) => {
+    try {
+      const org = await sdk.addons.applink.getAuthorization(connectionName.trim());
+if (!org || !org.dataApi) {
+  throw new Error(`Org ${connectionName} is not properly authorized`);
+}
 
-          // Execute SOQL query
-          const queryResult = await org.dataApi.query('SELECT Name, Id FROM Account')
-          console.log('Query results:', {
-            totalSize: queryResult.totalSize,
-            done: queryResult.done,
-            recordCount: queryResult.records.length
-          })
+      console.log('Connected to Salesforce org:', {
+        orgId: org.id,
+        username: org.user.username
+      });
 
-          // Transform the records to the expected format
-          const accounts = queryResult.records.map(record => ({
-            Name: record.fields.Name,
-            Id: record.fields.Id
-          }))
+      const queryResult = await org.dataApi.query('SELECT Name, Id FROM Account');
+      const accounts = queryResult.records.map(record => ({
+        Name: record.fields.Name,
+        Id: record.fields.Id
+      }));
 
-          return {
-            connectionName: connectionName.trim(),
-            accounts
-          }
-        } catch (error) {
-          console.error(`Error querying org ${connectionName}:`, error)
-          return {
-            connectionName: connectionName.trim(),
-            error: error.message,
-            accounts: []
-          }
-        }
-      })
-    )
-
-    res.render('pages/index', { accountsByOrg })
-  } catch (error) {
-    console.error('Error rendering index:', error)
-    res.status(500).send(error.message)
-  }
+      return { connectionName, accounts };
+    } catch (error) {
+      console.error(`Error querying org ${connectionName}:`, error.message);
+      return {
+        connectionName,
+        error: error.message.includes('500') 
+          ? 'Internal Server Error: Check AppLink configuration or reconnect the org.'
+          : error.message,
+        accounts: []
+      };
+    }
+  })
+);
 })
 
 const server = app.listen(port, () => {
