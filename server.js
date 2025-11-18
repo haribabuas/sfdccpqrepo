@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express')
-const path = require('path')
-const { init } = require('@heroku/applink')
+const path = require('path');
+const { init } = require('@heroku/applink');
+const salesforcesdk = require('@heroku/salesforce-sdk-nodejs');
 
 const port = process.env.PORT || 5006
 const app = express()
@@ -21,8 +22,10 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   connectionNames.map(async (connectionName) => {
     try {
       console.log('SDK initialized:', sdk.addons.applink);
+      console.log('SDKK :', sdkk.addons.applink);
+      const sdkk = salesforcesdk.init();
 console.log('Connection names:', connectionNames);
-      const org = await sdk.addons.applink.getAuthorization(connectionName.trim());
+      const org = await sdkk.addons.applink.getAuthorization(connectionName.trim());
 if (!org || !org.dataApi) {
   throw new Error(`Org ${connectionName} is not properly authorized`);
 }
