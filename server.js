@@ -19,9 +19,9 @@ app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
 app.post('/create-quote-lines-sap', async (req, res) => {
-  console.log('@@@reqsd',request.sdk);
-  const { event, context, logger } = request.sdk;
-  const appLinkAddon = request.sdk.addons.applink;
+  console.log('@@@reqsd',req.sdk);
+  const { event, context, logger } = req.sdk;
+  const appLinkAddon = req.sdk.addons.applink;
   console.log('@@@Appl',appLinkAddon);
   const accountsByOrg = await Promise.all(
   connectionNames.map(async (connectionName) => {
