@@ -33,12 +33,19 @@ app.post('/create-quote-lines-sap', async (req, res) => {
     }
   
     try {
-      const org = await sdk.addons.applink.getAuthorization(emptyOrgName);
+      const org = await sdk.addons.applink.getAuthorization(emptyOrgName,'applink-cubed-92276');
       console.log('@@@org', org);
       console.log('Connected to Salesforce org:', {
             orgId: org.id,
             username: org.user.username
           });
+
+           const queryResult = await org.dataApi.query('SELECT Name, Id FROM Account')
+          console.log('Query results:', {
+            totalSize: queryResult.totalSize,
+            done: queryResult.done,
+            recordCount: queryResult.records.length
+          })
     } catch (err) {
       console.error('Authorization error:', err);
     }
