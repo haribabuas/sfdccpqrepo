@@ -23,8 +23,9 @@ app.post('/create-quote-lines-sap', async (req, res) => {
   connectionNames.map(async (connectionName) => {
     try {
       console.log('SDK initialized:', sdk.addons.applink);
-      console.log('SDKK :', sdkk.addons.applink);
       const sdkk = salesforcesdk.init();
+      console.log('SDKK :', sdkk.addons.applink);
+      
 console.log('Connection names:', connectionNames);
       const org = await sdkk.addons.applink.getAuthorization(connectionName.trim());
 if (!org || !org.dataApi) {
