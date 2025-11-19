@@ -14,10 +14,6 @@ console.log('@@@sdkini',sdk);
 // Get connection names from environment variable
 const connectionNames = process.env.CONNECTION_NAMES ? process.env.CONNECTION_NAMES.split(',') : []
 console.log('@@@connectionNames',connectionNames);
-app.use(express.static(path.join(__dirname, 'public')))
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'ejs')
-
 
 function chunkArray(array, size) {
   const result = [];
