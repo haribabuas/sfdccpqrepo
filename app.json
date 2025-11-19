@@ -1,5 +1,5 @@
 {
-  "name": "Phone Change",
+  "name": "CPQ Quote",
   "description": "Heroku Connect Sample App",
   "repository": "https://github.com/haribabuas/sfdccpqrepo",
   "success_url": "/setup.html",
