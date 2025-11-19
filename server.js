@@ -29,12 +29,14 @@ function chunkArray(array, size) {
 
 app.post('/create-quote-lines-sap', async (req, res) => {
   const emptyOrgName = 'devcpq-org';
-    console.log('@@@reqsdk',req);
+    console.log('@@@request',req);
+    console.log('@@@reqBody',req.body());
+    console.log('@@@reqsdk',req.sdk);
     if (!connectionNames.includes(emptyOrgName)) {
       return res.status(400).send('empty-org connection not found')
     }
-    
-      try {
+  
+    try {
       const org = await sdk.addons.applink.getAuthorization(emptyOrgName);
       console.log('@@@org', org);
       console.log('Connected to Salesforce org:', {
