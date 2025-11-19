@@ -19,18 +19,14 @@ app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'ejs')
 
 app.post('/create-quote-lines-sap', async (req, res) => {
-  console.log('@@@reqsd',req.sdk);
-  const appLinkAddon = req.sdk.addons.applink;
-  console.log('@@@Appl',appLinkAddon);
+  console.log('@@@reqsd',req);
   const accountsByOrg = await Promise.all(
   connectionNames.map(async (connectionName) => {
     try {
       console.log('SDK initialized:', sdk.addons.applink);
-      const sdkk = salesforcesdk.init();
-      console.log('SDKK :', sdkk.addons.applink);
       
 console.log('Connection names:', connectionNames);
-      const org = await sdkk.addons.applink.getAuthorization(connectionName.trim());
+      const org = await sdk.addons.applink.getAuthorization(connectionName.trim());
 if (!org || !org.dataApi) {
   throw new Error(`Org ${connectionName} is not properly authorized`);
 }
