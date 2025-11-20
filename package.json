@@ -5,17 +5,12 @@
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": {
-    "@heroku/applink": "^1.0.0-ea.2",
-    "@heroku/salesforce-sdk-nodejs": "0.3.4-ea",
-    "axios": "^1.6.0",
-    "express": "^4.18.2",
-    "jsforce": "^3.10.1",
-    "dotenv": "^16.5.0",
-    "ejs": "^3.1.9",
-    "node-fetch": "^2.7.0",
-    "pg": "^8.11.1"
+
+   "dependencies": {
+    "@heroku/applink": "^1.0.0",
+    "express": "^5.1.0"
   },
+  
   "repository": {
     "type": "git",
     "url": "https://github.com/haribabuas/sfdccpqrepo.git"
