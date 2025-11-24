@@ -1,22 +1,17 @@
 {
-  "name": "heroku-Quote-api",
+  "name": "jj-applink-express-accounts",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-
-   "dependencies": {
+  "keywords": [],
+  "author": "Heroku DevRel <heroku-dev-advocacy@salesforce.com>",
+  "license": "Apache-2.0",
+  "description": "Heroku AppLink Sample App with Node.js and Express",
+  "dependencies": {
     "@heroku/applink": "^1.0.0",
     "express": "^5.1.0"
-  },
-  
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/haribabuas/sfdccpqrepo.git"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "license": "MIT"
+  }
 }

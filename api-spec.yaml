@@ -1,0 +1,37 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Heroku-Salesforce API
+  description: Sample Heroku app exposing APIs to connected Salesforce and Data Cloud orgs.
+paths:
+  /accounts:
+    get:
+      tags:
+        - accounts
+      summary: Get All Accounts
+      operationId: GetAccounts
+      description: Returns array of Accounts
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: 'ApplinkAccountsAccessConnectedApp'
+      responses:
+        '200':
+          description: Successfully returned a list of Accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '001...'
+        name:
+          type: string
+          example: 'Test Account'
