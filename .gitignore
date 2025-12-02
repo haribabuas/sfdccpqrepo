@@ -1,3 +1,13 @@
-/node_modules/
-/.idea/
-/npm-debug.log
+# Node build artifacts
+node_modules
+npm-debug.log
+
+# Local development
+*.env
+*.dev
+.DS_Store
+.idea
+
+# IDEs
+.cursor
+.vscode
